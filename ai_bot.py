@@ -31,7 +31,7 @@ def add_premium(user_id, days=30):
     c.execute("INSERT OR REPLACE INTO premium_users (user_id, expiry_date) VALUES (?, ?)", (user_id, expiry))
     conn.commit()
 
-# Komutlar
+# ====================== KOMUTLAR ======================
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.reply_to(message, "👋 Hoş geldin!\n\nSuper AI Asistan burada.\n/premium yazarak paketleri gör.")
@@ -62,15 +62,17 @@ TR02 0006 2000 4700 0006 6276 06
 @bot.message_handler(func=lambda m: "ödeme yaptım" in m.text.lower())
 def odeme(message):
     add_premium(message.from_user.id)
-    bot.reply_to(message, "✅ Premium 30 gün aktif edildi!\nArtık daha kaliteli cevaplar alacaksın.")
+    bot.reply_to(message, "✅ Tebrikler! Premium üyeliğin 30 gün aktif edildi.\nArtık daha kaliteli cevaplar alacaksın.")
 
-# Ana cevap
+# ====================== ANA CEVAP ======================
 @bot.message_handler(func=lambda message: True)
 def ai_cevap(message):
     text = message.text.lower().strip()
+    
+    # Komutları en başta kontrol et
     if text in ["/start", "start"]:
         return start(message)
-    if text in ["/premium", "premium", "paket"]:
+    if text in ["/premium", "premium", "paket", "premium paket"]:
         return premium(message)
 
     user_id = message.from_user.id
@@ -94,5 +96,5 @@ def ai_cevap(message):
     except:
         bot.reply_to(message, "❌ Hata oldu, lütfen tekrar dene.")
 
-print("✅ Bot son versiyon ile çalışıyor...")
+print("✅ Bot son düzeltme ile çalışıyor...")
 bot.infinity_polling()
