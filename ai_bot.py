@@ -1,13 +1,33 @@
-import telebot
-import os
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.reply_to(message, 
+        "👋 *Merhaba! Hoş geldin.*\n\n"
+        "Ben **Super AI Asistan**.\n"
+        "Her konuda yardımcı olabilirim.\n\n"
+        "Premium özellikler için `/premium` yazman yeterli.", 
+        parse_mode="Markdown")
 
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+@bot.message_handler(commands=['premium'])
+def premium(message):
+    text = """
+🌟 <b>Super AI Premium</b>
 
-bot = telebot.TeleBot(TELEGRAM_TOKEN)
+📦 <b>Paket Seçenekleri</b>
+• 1 Aylık → 99 TL
+• 3 Aylık → 249 TL (indirimli)
+• 12 Aylık → 799 TL (en avantajlı)
 
-@bot.message_handler(func=lambda message: True)
-def cevap(message):
-    bot.reply_to(message, "✅ Bot çalışıyor!\nSelam, nasılsın?")
+✨ <b>Avantajlar</b>
+• Daha uzun, detaylı ve yaratıcı cevaplar
+• Sınırsız kullanım
+• Daha yüksek yanıt kalitesi
+• Öncelikli destek
 
-print("✅ EN BASİT BOT ÇALIŞIYOR...")
-bot.infinity_polling()
+💰 <b>Ödeme Bilgileri</b>
+Garanti IBAN:
+`TR02 0006 2000 4700 0006 6276 06`
+
+Ödeme yaptıktan sonra **"Ödeme yaptım"** yaz ve dekontu at.
+Dekontunu kontrol edip hemen premium’u aktif ediyorum.
+"""
+    bot.reply_to(message, text, parse_mode="HTML")
