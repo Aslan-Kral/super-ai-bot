@@ -1,14 +1,11 @@
 import telebot
+import requests
 import os
-from datetime import datetime, timedelta
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
-
-# Basit premium takibi (daha sonra veritabanı yaparız)
-premium_users = {}
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -25,19 +22,20 @@ Avantajlar:
 • Öncelikli destek
 
 Fiyat:
-• 1 Ay → 9.99€ / 99 TL
+• 1 Ay → 99 TL
 
-Ödeme için:
-👉 Garanti IBAN veya Papara linki (senin linkini buraya yaz)
+Ödeme:
+Garanti IBAN:
+TR02 0006 2000 4700 0006 6276 06
 
-Ödeme yaptıktan sonra "Ödeme yaptım" yaz + dekont at.
-Admin seni onaylasın.
+Ödeme yaptıktan sonra "Ödeme yaptım" yaz ve dekontu at.
+Hemen premium aktif edeyim.
 """
     bot.reply_to(message, text, parse_mode="HTML")
 
 @bot.message_handler(func=lambda m: "ödeme yaptım" in m.text.lower())
-def odeme_kontrol(message):
-    bot.reply_to(message, "✅ Ödemeni aldım. Kontrol ediyorum...\n\nEn kısa sürede premium aktif edilecek. Teşekkürler!")
+def odeme(message):
+    bot.reply_to(message, "✅ Teşekkürler! Ödemeni kontrol ediyorum...\nDekontu at, en kısa sürede premium yapayım.")
 
 @bot.message_handler(func=lambda message: True)
 def ai_cevap(message):
@@ -56,5 +54,5 @@ def ai_cevap(message):
     except:
         bot.reply_to(message, "Hata oldu, tekrar dene.")
 
-print("✅ Bot Premium modunda çalışıyor...")
+print("✅ Bot Premium sistemi ile çalışıyor...")
 bot.infinity_polling()
