@@ -34,10 +34,10 @@ def add_premium(user_id, days=30):
 # ====================== KOMUTLAR ======================
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.reply_to(message, "👋 Hoş geldin!\n\nSuper AI Asistan burada.\n/premium yazarak paketleri gör.")
+    bot.reply_to(message, "👋 Hoş geldin!\n\n/premium yazarak paketleri görebilirsin.")
 
 @bot.message_handler(commands=['premium'])
-def premium(message):
+def premium_cmd(message):
     text = """
 🌟 <b>Super AI Premium</b>
 
@@ -59,22 +59,19 @@ TR02 0006 2000 4700 0006 6276 06
 """
     bot.reply_to(message, text, parse_mode="HTML")
 
-@bot.message_handler(func=lambda m: "ödeme yaptım" in m.text.lower())
-def odeme(message):
-    add_premium(message.from_user.id)
-    bot.reply_to(message, "✅ Tebrikler! Premium üyeliğin 30 gün aktif edildi.\nArtık daha kaliteli cevaplar alacaksın.")
-
-# ====================== ANA CEVAP ======================
-@bot.message_handler(func=lambda message: True)
+# Normal mesajlarda da "premium" kelimesini yakala
+@bot.message_handler(func=lambda m: True)
 def ai_cevap(message):
     text = message.text.lower().strip()
     
-    # Komutları en başta kontrol et
-    if text in ["/start", "start"]:
+    # Premium kelimesi geçtiğinde premium menüsünü göster
+    if text == "premium" or text == "/premium" or "paket" in text:
+        return premium_cmd(message)
+    
+    if text == "/start" or text == "start":
         return start(message)
-    if text in ["/premium", "premium", "paket", "premium paket"]:
-        return premium(message)
 
+    # Normal AI cevabı
     user_id = message.from_user.id
     premium = is_premium(user_id)
 
@@ -96,5 +93,5 @@ def ai_cevap(message):
     except:
         bot.reply_to(message, "❌ Hata oldu, lütfen tekrar dene.")
 
-print("✅ Bot son düzeltme ile çalışıyor...")
+print("✅ Slash'sız premium da çalışıyor...")
 bot.infinity_polling()
