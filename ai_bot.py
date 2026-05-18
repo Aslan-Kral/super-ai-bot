@@ -2,14 +2,16 @@ import telebot
 import requests
 import os
 
+# ================== GÜVENLİ YÖNTEM ==================
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+# ===================================================
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.reply_to(message, "✅ Hoş geldin!\nHer şeyi sorabilirsin.\n\n/premium ile premium üye ol.")
+    bot.reply_to(message, "✅ Hoş geldin!\nHer şeyi sorabilirsin.\n\n/premium ile premium ol.")
 
 @bot.message_handler(commands=['premium'])
 def premium(message):
@@ -35,7 +37,7 @@ Hemen premium aktif edeyim.
 
 @bot.message_handler(func=lambda m: "ödeme yaptım" in m.text.lower())
 def odeme(message):
-    bot.reply_to(message, "✅ Teşekkürler! Ödemeni kontrol ediyorum...\nDekontu at, en kısa sürede premium yapayım.")
+    bot.reply_to(message, "✅ Teşekkürler! Dekontu at, ödemeni kontrol edip premium'u hemen aktif edeyim.")
 
 @bot.message_handler(func=lambda message: True)
 def ai_cevap(message):
