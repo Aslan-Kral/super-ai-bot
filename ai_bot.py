@@ -2,10 +2,8 @@ import telebot
 import requests
 import os
 
-# ================== GÜVENLİ YÖNTEM ==================
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-# ===================================================
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
@@ -41,12 +39,16 @@ def odeme(message):
 
 @bot.message_handler(func=lambda message: True)
 def ai_cevap(message):
+    # Premium komutunu özel olarak ele al
+    if message.text.lower() == "/premium":
+        return premium(message)
+    
     bot.reply_to(message, "Düşünüyorum... ⏳")
     try:
         headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
         data = {
             "model": "llama-3.3-70b-versatile",
-            "messages": [{"role": "user", "content": message.text}],
+            "messages": [{"role": "user", "content": message.text + " (Türkçe cevap ver)"}],
             "temperature": 0.7,
             "max_tokens": 1500
         }
@@ -54,7 +56,7 @@ def ai_cevap(message):
         cevap = response.json()["choices"][0]["message"]["content"]
         bot.reply_to(message, cevap)
     except:
-        bot.reply_to(message, "Hata oldu, tekrar dene.")
+        bot.reply_to(message, "❌ Hata oldu, lütfen tekrar dene.")
 
-print("✅ Bot Premium sistemi ile çalışıyor...")
+print("✅ Bot çalışıyor...")
 bot.infinity_polling()
