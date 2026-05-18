@@ -9,7 +9,7 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-# ====================== VERİTABANI ======================
+# Veritabanı
 conn = sqlite3.connect('bot_database.db', check_same_thread=False)
 c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS premium_users 
@@ -21,8 +21,7 @@ def is_premium(user_id):
     result = c.fetchone()
     if result:
         try:
-            expiry = datetime.fromisoformat(result[0])
-            return datetime.now() < expiry
+            return datetime.fromisoformat(result[0]) > datetime.now()
         except:
             return False
     return False
@@ -31,86 +30,70 @@ def add_premium(user_id, days=30):
     expiry = (datetime.now() + timedelta(days=days)).isoformat()
     c.execute("INSERT OR REPLACE INTO premium_users (user_id, expiry_date) VALUES (?, ?)", (user_id, expiry))
     conn.commit()
-    return expiry
 
-# ====================== KOMUTLAR ======================
+# ====================== KOMUTLAR (Öncelikli) ======================
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.reply_to(message, "👋 **Hoş geldin!**\n\n"
-                          "Ben Super AI Asistan. Her konuda yardımcı olabilirim.\n"
-                          "Premium özellikler için `/premium` yaz.")
+    bot.reply_to(message, "👋 Hoş geldin!\n\nSuper AI Asistan'a hoş geldin.\nHer konuda yardımcı olabilirim.\n\n/premium yazarak premium paketleri gör.")
 
 @bot.message_handler(commands=['premium'])
 def premium(message):
     text = """
 🌟 <b>Super AI Premium</b>
 
-📦 Paketler:
+Paketler:
 • 1 Aylık → 99 TL
-• 3 Aylık → 249 TL (en popüler)
-• 12 Aylık → 799 TL (en avantajlı)
+• 3 Aylık → 249 TL 
+• 12 Aylık → 799 TL 
 
-✨ Avantajlar:
+Avantajlar:
 • Daha uzun, detaylı ve yaratıcı cevaplar
 • Sınırsız kullanım
-• Öncelikli yanıt kalitesi
+• Daha iyi kalite
 
-💰 Ödeme:
+Ödeme:
 Garanti IBAN:
-`TR02 0006 2000 4700 0006 6276 06`
+TR02 0006 2000 4700 0006 6276 06
 
-Ödeme yaptıktan sonra **"Ödeme yaptım"** yaz ve dekontu at.
-Hemen aktif ediyorum.
+"Ödeme yaptım" yaz + dekont at → Hemen aktif ederim.
 """
     bot.reply_to(message, text, parse_mode="HTML")
 
 @bot.message_handler(func=lambda m: "ödeme yaptım" in m.text.lower())
 def odeme(message):
-    user_id = message.from_user.id
-    expiry = add_premium(user_id, 30)
-    bot.reply_to(message, f"✅ **Tebrikler!** Premium üyeliğin aktif edildi.\n"
-                          f"Bitiş tarihi: {expiry[:10]}\n\n"
-                          "Artık çok daha kaliteli cevaplar alacaksın.")
+    add_premium(message.from_user.id)
+    bot.reply_to(message, "✅ Premium 30 gün aktif edildi!\nArtık daha kaliteli cevaplar alacaksın.")
 
-# ====================== ANA AI ======================
+# ====================== TÜM MESAJLAR ======================
 @bot.message_handler(func=lambda message: True)
 def ai_cevap(message):
-    text_lower = message.text.lower().strip()
+    text = message.text.lower().strip()
     
-    # Komut koruma
-    if text_lower in ["/start", "start", "/premium", "premium", "paket"]:
-        if text_lower in ["/start", "start"]:
-            return start(message)
-        else:
-            return premium(message)
+    if text == "/start" or text == "start":
+        return start(message)
+    if text == "/premium" or text == "premium" or text == "paket":
+        return premium(message)
 
     user_id = message.from_user.id
-    premium_status = is_premium(user_id)
+    premium = is_premium(user_id)
 
     bot.reply_to(message, "Düşünüyorum... ⏳")
 
     try:
-        quality_instruction = (
-            "Çok detaylı, uzun, yaratıcı, maddeli, örnekli ve profesyonel Türkçe cevap ver."
-            if premium_status else
-            "Kısa, net, yardımcı ve Türkçe cevap ver."
-        )
-
+        instruction = "Çok detaylı, uzun, yaratıcı, maddeli ve örnekli Türkçe cevap ver." if premium else "Kısa, net ve yardımcı Türkçe cevap ver."
+        
         headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
         data = {
             "model": "llama-3.3-70b-versatile",
-            "messages": [{"role": "user", "content": f"{message.text}\n\n{quality_instruction}"}],
-            "temperature": 0.75,
-            "max_tokens": 2800 if premium_status else 1200
+            "messages": [{"role": "user", "content": f"{message.text}\n\n{instruction}"}],
+            "temperature": 0.7,
+            "max_tokens": 2500 if premium else 1100
         }
-        
-        response = requests.post("https://api.groq.com/openai/v1/chat/completions", 
-                               headers=headers, json=data, timeout=35)
+        response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=data)
         cevap = response.json()["choices"][0]["message"]["content"]
         bot.reply_to(message, cevap)
-        
     except:
-        bot.reply_to(message, "❌ Şu anda biraz yoğunum, lütfen 10 saniye sonra tekrar dene.")
+        bot.reply_to(message, "❌ Hata oldu, lütfen tekrar dene.")
 
-print("✅ Super AI Bot - Profesyonel Versiyon Çalışıyor...")
+print("✅ Bot son versiyon ile çalışıyor...")
 bot.infinity_polling()
