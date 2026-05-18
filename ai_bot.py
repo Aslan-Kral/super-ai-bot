@@ -31,10 +31,10 @@ def add_premium(user_id, days=30):
     c.execute("INSERT OR REPLACE INTO premium_users (user_id, expiry_date) VALUES (?, ?)", (user_id, expiry))
     conn.commit()
 
-# ====================== ÖNCELİKLİ KOMUTLAR ======================
+# Komutlar
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.reply_to(message, "👋 Hoş geldin!\n\nSuper AI Asistan burada.\nHer konuda yardımcı olabilirim.\n\n/premium yazarak paketleri gör.")
+    bot.reply_to(message, "👋 Hoş geldin!\n\nSuper AI Asistan burada.\n/premium yazarak paketleri gör.")
 
 @bot.message_handler(commands=['premium'])
 def premium(message):
@@ -43,12 +43,12 @@ def premium(message):
 
 Paketler:
 • 1 Aylık → 99 TL
-• 3 Aylık → 249 TL (indirimli)
+• 3 Aylık → 249 TL 
 • 12 Aylık → 799 TL 
 
 Avantajlar:
-• Daha uzun + detaylı cevaplar
-• Yaratıcı ve profesyonel yanıtlar
+• Daha uzun ve detaylı cevaplar
+• Yaratıcı yanıtlar
 • Sınırsız kullanım
 
 Ödeme:
@@ -62,17 +62,15 @@ TR02 0006 2000 4700 0006 6276 06
 @bot.message_handler(func=lambda m: "ödeme yaptım" in m.text.lower())
 def odeme(message):
     add_premium(message.from_user.id)
-    bot.reply_to(message, "✅ Premium üyeliğin 30 gün aktif edildi!\nArtık daha kaliteli cevaplar alacaksın.")
+    bot.reply_to(message, "✅ Premium 30 gün aktif edildi!\nArtık daha kaliteli cevaplar alacaksın.")
 
-# ====================== ANA CEVAP (Son çare) ======================
+# Ana cevap
 @bot.message_handler(func=lambda message: True)
 def ai_cevap(message):
     text = message.text.lower().strip()
-    
-    # Komutları kuvvetle yakala
     if text in ["/start", "start"]:
         return start(message)
-    if text in ["/premium", "premium", "paket", "premium paket"]:
+    if text in ["/premium", "premium", "paket"]:
         return premium(message)
 
     user_id = message.from_user.id
@@ -81,7 +79,7 @@ def ai_cevap(message):
     bot.reply_to(message, "Düşünüyorum... ⏳")
 
     try:
-        instruction = "Çok detaylı, uzun, yaratıcı, maddeli ve örneklerle Türkçe cevap ver." if premium else "Kısa, net ve yardımcı Türkçe cevap ver."
+        instruction = "Çok detaylı, uzun, yaratıcı, maddeli ve örnekli Türkçe cevap ver." if premium else "Kısa, net ve yardımcı Türkçe cevap ver."
         
         headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
         data = {
@@ -96,5 +94,5 @@ def ai_cevap(message):
     except:
         bot.reply_to(message, "❌ Hata oldu, lütfen tekrar dene.")
 
-print("✅ Son versiyon yüklendi...")
+print("✅ Bot son versiyon ile çalışıyor...")
 bot.infinity_polling()
