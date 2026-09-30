@@ -1,33 +1,61 @@
-@bot.message_handler(commands=['start'])
-def start(message):
-    bot.reply_to(message, 
-        "👋 *Merhaba! Hoş geldin.*\n\n"
-        "Ben **Super AI Asistan**.\n"
-        "Her konuda yardımcı olabilirim.\n\n"
-        "Premium özellikler için `/premium` yazman yeterli.", 
-        parse_mode="Markdown")
+"""Telegram command bot. AI replies and paid subscriptions are not implemented."""
+import os
+import sys
 
-@bot.message_handler(commands=['premium'])
-def premium(message):
-    text = """
-🌟 <b>Super AI Premium</b>
 
-📦 <b>Paket Seçenekleri</b>
-• 1 Aylık → 99 TL
-• 3 Aylık → 249 TL (indirimli)
-• 12 Aylık → 799 TL (en avantajlı)
+def create_bot(token=None, *, bot_factory=None):
+    token = (token if token is not None else os.environ.get("TELEGRAM_BOT_TOKEN", "")).strip()
+    if not token:
+        raise ValueError("TELEGRAM_BOT_TOKEN ortam değişkenini ayarlayın.")
+    if bot_factory is None:
+        from telebot import TeleBot
+        bot_factory = TeleBot
+    bot = bot_factory(token)
 
-✨ <b>Avantajlar</b>
-• Daha uzun, detaylı ve yaratıcı cevaplar
-• Sınırsız kullanım
-• Daha yüksek yanıt kalitesi
-• Öncelikli destek
+    @bot.message_handler(commands=["start", "help"])
+    def start(message):
+        bot.reply_to(
+            message,
+            "👋 <b>Merhaba! Super AI Asistan'a hoş geldin.</b>\n\n"
+            "Bu sürüm komut botudur. Yapay zekâ yanıtları henüz bağlı değildir.\n"
+            "Üyelik durumunu görmek için /premium yazabilirsin.",
+            parse_mode="HTML",
+        )
 
-💰 <b>Ödeme Bilgileri</b>
-Garanti IBAN:
-`TR02 0006 2000 4700 0006 6276 06`
+    @bot.message_handler(commands=["premium"])
+    def premium(message):
+        bot.reply_to(
+            message,
+            "🌟 <b>Super AI Premium</b>\n\n"
+            "Ücretli üyelik henüz kullanıma açılmadı. "
+            "Ödeme doğrulama ve üyelik etkinleştirme sistemi hazır değildir.\n"
+            "Lütfen bu bot üzerinden ödeme veya dekont göndermeyin.",
+            parse_mode="HTML",
+        )
 
-Ödeme yaptıktan sonra **"Ödeme yaptım"** yaz ve dekontu at.
-Dekontunu kontrol edip hemen premium’u aktif ediyorum.
-"""
-    bot.reply_to(message, text, parse_mode="HTML")
+    @bot.message_handler(content_types=["text"])
+    def unsupported(message):
+        bot.reply_to(
+            message,
+            "Yapay zekâ yanıt servisi henüz bağlı değil. "
+            "Kullanılabilir komutlar: /start, /help ve /premium.",
+        )
+
+    return bot
+
+
+def main():
+    try:
+        bot = create_bot()
+    except ValueError:
+        print("Bot başlatılamadı: TELEGRAM_BOT_TOKEN eksik veya geçersiz.", file=sys.stderr)
+        return 2
+    except ImportError:
+        print("Bağımlılıklar eksik: pip install -r requirements.txt", file=sys.stderr)
+        return 2
+    bot.infinity_polling(timeout=20, long_polling_timeout=20)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
